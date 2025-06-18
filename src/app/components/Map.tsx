@@ -1,28 +1,30 @@
 "use client";
 
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Icon } from "leaflet";
 import { useEffect, useState } from "react";
 
-// Custom icons
+// Custom icons with better styling
 const defaultIcon = new Icon({
-  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+  iconUrl: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyQzIgMTcuNTIgNi40OCAyMiAxMiAyMkMxNy41MiAyMiAyMiAxNy41MiAyMiAxMkMyMiA2LjQ4IDE3LjUyIDIgMTIgMloiIGZpbGw9IiM0Mjg1RjQiLz4KPHBhdGggZD0iTTEyIDZDNi40OCA2IDIgMTAuNDggMiAxNkMyIDIxLjUyIDYuNDggMjYgMTIgMjZDMjEuNTIgMjYgMjYgMjEuNTIgMjYgMTZDMjYgMTAuNDggMjEuNTIgNiAxMiA2WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTEyIDEwQzE0LjIwOTEgMTAgMTYgMTEuNzkwOSAxNiAxNEMxNiAxNi4yMDkxIDE0LjIwOTEgMTggMTIgMThDOS43OTA5IDE4IDggMTYuMjA5MSA4IDE0QzggMTEuNzkwOSA5Ljc5MDkgMTAgMTIgMTBaIiBmaWxsPSIjNDI4NUY0Ii8+Cjwvc3ZnPgo=",
+  iconSize: [24, 24],
+  iconAnchor: [12, 24],
+  popupAnchor: [0, -24],
 });
 
 const favoriteIcon = new Icon({
-  iconUrl:
-    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+  iconUrl: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyQzIgMTcuNTIgNi40OCAyMiAxMiAyMkMxNy41MiAyMiAyMiAxNy41MiAyMiAxMkMyMiA2LjQ4IDE3LjUyIDIgMTIgMloiIGZpbGw9IiNFQTRDMzUiLz4KPHBhdGggZD0iTTEyIDZDNi40OCA2IDIgMTAuNDggMiAxNkMyIDIxLjUyIDYuNDggMjYgMTIgMjZDMjEuNTIgMjYgMjYgMjEuNTIgMjYgMTZDMjYgMTAuNDggMjEuNTIgNiAxMiA2WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTEyIDEwQzE0LjIwOTEgMTAgMTYgMTEuNzkwOSAxNiAxNEMxNiAxNi4yMDkxIDE0LjIwOTEgMTggMTIgMThDOS43OTA5IDE4IDggMTYuMjA5MSA4IDE0QzggMTEuNzkwOSA5Ljc5MDkgMTAgMTIgMTBaIiBmaWxsPSIjRUE0QzM1Ii8+Cjwvc3ZnPgo=",
+  iconSize: [24, 24],
+  iconAnchor: [12, 24],
+  popupAnchor: [0, -24],
 });
 
 const currentLocationIcon = new Icon({
-  iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png",
-  iconSize: [30, 46],
-  iconAnchor: [15, 46],
+  iconUrl: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyQzIgMTcuNTIgNi40OCAyMiAxMiAyMkMxNy41MiAyMiAyMiAxNy41MiAyMiAxMkMyMiA2LjQ4IDE3LjUyIDIgMTIgMloiIGZpbGw9IiMzNEE4NTMiLz4KPHBhdGggZD0iTTEyIDZDNi40OCA2IDIgMTAuNDggMiAxNkMyIDIxLjUyIDYuNDggMjYgMTIgMjZDMjEuNTIgMjYgMjYgMjEuNTIgMjYgMTZDMjYgMTAuNDggMjEuNTIgNiAxMiA2WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTEyIDEwQzE0LjIwOTEgMTAgMTYgMTEuNzkwOSAxNiAxNEMxNiAxNi4yMDkxIDE0LjIwOTEgMTggMTIgMThDOS43OTA5IDE4IDggMTYuMjA5MSA4IDE0QzggMTEuNzkwOSA5Ljc5MDkgMTAgMTIgMTBaIiBmaWxsPSIjMzRBODUzIi8+Cjwvc3ZnPgo=",
+  iconSize: [28, 28],
+  iconAnchor: [14, 28],
+  popupAnchor: [0, -28],
 });
 
 interface Location {
@@ -53,17 +55,44 @@ interface MapProps {
   onFavoriteToggle: (locationId: string) => void;
 }
 
-// Component to handle map controls
-function MapControls({ onCenterLocation }: { onCenterLocation: () => void }) {
+// Inner map controls component that can access the map context
+function MapControlsInner({ onCenterLocation }: { onCenterLocation: () => void }) {
+  const map = useMap();
+  
   return (
-    <div className="absolute top-4 right-4 z-[1000]">
+    <div className="absolute top-4 right-4 z-[1000] space-y-3">
+      {/* My Location Button */}
       <button
         onClick={onCenterLocation}
-        className="bg-white hover:bg-gray-100 text-gray-800 font-bold py-2 px-4 rounded shadow-lg border border-gray-300 transition-colors duration-200"
+        className="btn-icon w-12 h-12 flex items-center justify-center"
         title="Center on my location"
       >
-        📍 My Location
+        <svg className="w-5 h-5 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+        </svg>
       </button>
+      
+      {/* Zoom Controls */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <button
+          className="w-12 h-10 flex items-center justify-center border-b border-gray-200 hover:bg-gray-50 transition-colors"
+          onClick={() => map.zoomIn()}
+          title="Zoom in"
+        >
+          <svg className="w-4 h-4 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+          </svg>
+        </button>
+        <button
+          className="w-12 h-10 flex items-center justify-center hover:bg-gray-50 transition-colors"
+          onClick={() => map.zoomOut()}
+          title="Zoom out"
+        >
+          <svg className="w-4 h-4 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M19 13H5v-2h14v2z"/>
+          </svg>
+        </button>
+      </div>
     </div>
   );
 }
@@ -89,9 +118,7 @@ export default function Map({
   const [currentLocation, setCurrentLocation] = useState<[number, number] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedLocation, setSelectedLocation] = useState<Location | null>(
-    null
-  );
+  const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -161,28 +188,29 @@ export default function Map({
   };
 
   return (
-    <div className="h-[500px] w-full relative">
+    <div className="h-full w-full relative map-container">
       {error && (
-        <div
-          className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4"
-          role="alert"
-        >
-          <strong className="font-bold">Error: </strong>
-          <span className="block sm:inline">{error}</span>
-          <button
-            onClick={getCurrentLocation}
-            className="ml-2 text-red-700 underline hover:no-underline"
-          >
-            Try again
-          </button>
+        <div className="absolute top-4 left-4 right-4 z-[1002] bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg shadow-sm">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+            </svg>
+            <span className="text-sm font-medium">{error}</span>
+            <button
+              onClick={getCurrentLocation}
+              className="ml-auto text-red-600 hover:text-red-800 underline text-sm"
+            >
+              Try again
+            </button>
+          </div>
         </div>
       )}
       
       {loading && (
-        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-[1001]">
+        <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-[1001]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-            <p className="text-gray-600">Getting your location...</p>
+            <div className="loading-spinner h-8 w-8 mx-auto mb-3"></div>
+            <p className="text-gray-600 text-sm font-medium">Getting your location...</p>
           </div>
         </div>
       )}
@@ -192,6 +220,7 @@ export default function Map({
         zoom={13}
         scrollWheelZoom={true}
         style={{ height: "100%", width: "100%" }}
+        zoomControl={false}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -202,10 +231,16 @@ export default function Map({
         {currentLocation && (
           <Marker position={currentLocation} icon={currentLocationIcon}>
             <Popup>
-              <div className="p-2">
-                <h3 className="font-bold text-blue-600">📍 Your Current Location</h3>
+              <div className="p-3 min-w-[200px]">
+                <div className="flex items-center mb-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  <h3 className="font-semibold text-gray-900">Your Current Location</h3>
+                </div>
                 <p className="text-sm text-gray-600">
-                  Lat: {currentLocation[0].toFixed(6)}, Lng: {currentLocation[1].toFixed(6)}
+                  Lat: {currentLocation[0].toFixed(6)}
+                </p>
+                <p className="text-sm text-gray-600">
+                  Lng: {currentLocation[1].toFixed(6)}
                 </p>
               </div>
             </Popup>
@@ -229,19 +264,30 @@ export default function Map({
                 }
               >
                 <Popup>
-                  <div className="p-2">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="font-bold">{getLocationName(location)}</h3>
+                  <div className="p-3 min-w-[250px]">
+                    <div className="flex justify-between items-start mb-3">
+                      <h3 className="font-semibold text-gray-900 text-base">
+                        {getLocationName(location)}
+                      </h3>
                       <button
                         onClick={() => onFavoriteToggle(location._id || "")}
-                        className="text-gray-500 hover:text-red-500 focus:outline-none"
+                        className="text-gray-400 hover:text-red-500 focus:outline-none transition-colors"
+                        title={favorites.includes(location._id || "") ? "Remove from favorites" : "Add to favorites"}
                       >
-                        {favorites.includes(location._id || "") ? "★" : "☆"}
+                        <svg className="w-5 h-5" fill={favorites.includes(location._id || "") ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                        </svg>
                       </button>
                     </div>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-gray-600 mb-2">
                       {getLocationDetails(location)}
                     </p>
+                    {location.address?.street && (
+                      <div className="text-xs text-gray-500">
+                        📍 {location.address.street}
+                        {location.address.housenumber && ` ${location.address.housenumber}`}
+                      </div>
+                    )}
                   </div>
                 </Popup>
               </Marker>
@@ -249,9 +295,8 @@ export default function Map({
         )}
         
         <MapUpdater center={position} />
+        <MapControlsInner onCenterLocation={getCurrentLocation} />
       </MapContainer>
-      
-      <MapControls onCenterLocation={getCurrentLocation} />
     </div>
   );
 }
