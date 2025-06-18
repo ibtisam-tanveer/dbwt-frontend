@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import {
   getLocationByAmenity,
   getLocationByName,
   getLocations,
+  getNearestLocations,
 } from "../utils/apis/location";
 
 interface LocationFiltersProps {
@@ -20,6 +21,12 @@ export default function LocationFilters({
   const [amenityFilter, setAmenityFilter] = useState("");
   const [filterData, setFilterData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [currentLocation, setCurrentLocation] = useState<
+    [number, number] | null
+  >(null);
+  const [position, setPosition] = useState<[number, number]>([51.505, -0.09]);
+  const [distance, setDistance] = useState(-1);
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -85,15 +92,67 @@ export default function LocationFilters({
   }, [amenityFilter]);
 
   const showClearButton = () => {
-    return searchTerm || amenityFilter ? true : false;
+    return searchTerm || amenityFilter || distance != -1 ? true : false;
   };
   const clearAll = async () => {
     const res = await getLocations();
     setLocations(res);
     setAmenityFilter("");
     setSearchTerm("");
+    setDistance(-1)
+  };
+  const filterNearByLocations = async () => {
+    const result = await getNearestLocations({
+      lon: position[1],
+      lat: position[0],
+      distance: distance,
+    });
+    setLocations(result);
+    console.log(result);
   };
 
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      setLoading(true);
+      setError(null);
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const newPosition: [number, number] = [
+            position.coords.latitude,
+            position.coords.longitude,
+          ];
+          setCurrentLocation(newPosition);
+          setPosition(newPosition);
+          setLoading(false);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setError(
+            "Unable to get your current location. Please check your location permissions."
+          );
+          setLoading(false);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 60000,
+        }
+      );
+    } else {
+      setError("Geolocation is not supported by this browser.");
+    }
+  };
+
+  useEffect(() => {
+    console.log("distance", distance);
+    if (distance != -1) {
+      filterNearByLocations();
+    }
+  }, [distance]);
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
   return (
     <div className="space-y-4 bg-white p-4 rounded-lg shadow-sm">
       {/* Search Input */}
@@ -135,6 +194,33 @@ export default function LocationFilters({
             </option>
           ))}
         </select>
+      </div>
+      <div>
+        <div className="w-full max-w-md mx-auto p-4">
+          {distance != -1 && (
+            <label
+              htmlFor="slider"
+              className="block text-black text-lg font-medium mb-2 text-center"
+            >
+              Range <span className="text-black font-bold">{distance}</span> km
+            </label>
+          )}
+
+          <input
+            id="slider"
+            type="range"
+            min="1"
+            max="10"
+            value={distance}
+            onChange={(e) => setDistance(parseFloat(e.target.value))}
+            className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
+          />
+
+          <div className="flex justify-between text-sm text-gray-500 mt-2">
+            <span>1</span>
+            <span>10</span>
+          </div>
+        </div>
       </div>
       {showClearButton() && (
         <button
