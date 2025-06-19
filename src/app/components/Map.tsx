@@ -9,60 +9,150 @@ import {
   ZoomControl,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import { Icon } from "leaflet";
+import { Icon, divIcon } from "leaflet";
 import { useEffect, useState } from "react";
 import { toggleFavourites } from "../utils/apis/location";
 
 // Custom icons with better styling
 const defaultIcon = new Icon({
   iconUrl:
-    "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyQzIgMTcuNTIgNi40OCAyMiAxMiAyMkMxNy41MiAyMiAyMiAxNy41MiAyMiAxMkMyMiA2LjQ4IDE3LjUyIDIgMTIgMloiIGZpbGw9IiM0Mjg1RjQiLz4KPHBhdGggZD0iTTEyIDZDNi40OCA2IDIgMTAuNDggMiAxNkMyIDIxLjUyIDYuNDggMjYgMTIgMjZDMjEuNTIgMjYgMjYgMjEuNTIgMjYgMTZDMjYgMTAuNDggMjEuNTIgNiAxMiA2WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTEyIDEwQzE0LjIwOTEgMTAgMTYgMTEuNzkwOSAxNiAxNEMxNiAxNi4yMDkxIDE0LjIwOTEgMTggMTIgMThDOS43OTA5IDE4IDggMTYuMjA5MSA4IDE0QzggMTEuNzkwOSA5Ljc5MDkgMTAgMTIgMTBaIiBmaWxsPSIjNDI4NUY0Ii8+Cjwvc3ZnPgo=",
-  iconSize: [24, 24],
-  iconAnchor: [12, 24],
-  popupAnchor: [0, -24],
+    "data:image/svg+xml;utf8,<svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M20 2C12 2 6 8 6 16c0 8 14 22 14 22s14-14 14-22c0-8-6-14-14-14z' fill='blue' stroke='white' stroke-width='2'/><circle cx='20' cy='16' r='6' fill='white'/></svg>",
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
+  popupAnchor: [0, -40],
+  className: "marker-icon-default-location",
 });
 
 const favoriteIcon = new Icon({
   iconUrl:
-    "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyQzIgMTcuNTIgNi40OCAyMiAxMiAyMkMxNy41MiAyMiAyMiAxNy41MiAyMiAxMkMyMiA2LjQ4IDE3LjUyIDIgMTIgMloiIGZpbGw9IiNFQTRDMzUiLz4KPHBhdGggZD0iTTEyIDZDNi40OCA2IDIgMTAuNDggMiAxNkMyIDIxLjUyIDYuNDggMjYgMTIgMjZDMjEuNTIgMjYgMjYgMjEuNTIgMjYgMTZDMjYgMTAuNDggMjEuNTIgNiAxMiA2WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTEyIDEwQzE0LjIwOTEgMTAgMTYgMTEuNzkwOSAxNiAxNEMxNiAxNi4yMDkxIDE0LjIwOTEgMTggMTIgMThDOS43OTA5IDE4IDggMTYuMjA5MSA4IDE0QzggMTEuNzkwOSA5Ljc5MDkgMTAgMTIgMTBaIiBmaWxsPSIjRUE0QzM1Ii8+Cjwvc3ZnPgo=",
-  iconSize: [24, 24],
-  iconAnchor: [12, 24],
-  popupAnchor: [0, -24],
+    "data:image/svg+xml;utf8,<svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'><defs><linearGradient id='favGradient' x1='0' y1='0' x2='0' y2='1'><stop offset='0%' stop-color='%23FF5F6D'/><stop offset='100%' stop-color='%23FFC371'/></linearGradient></defs><path d='M20 2C12 2 6 8 6 16c0 8 14 22 14 22s14-14 14-22c0-8-6-14-14-14z' fill='url(%23favGradient)' stroke='white' stroke-width='2'/><circle cx='20' cy='16' r='6' fill='white'/></svg>",
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
+  popupAnchor: [0, -40],
+  className: "marker-icon-favorite",
 });
 
 const currentLocationIcon = new Icon({
   iconUrl:
-    "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyQzIgMTcuNTIgNi40OCAyMiAxMiAyMkMxNy41MiAyMiAyMiAxNy41MiAyMiAxMkMyMiA2LjQ4IDE3LjUyIDIgMTIgMloiIGZpbGw9IiMzNEE4NTMiLz4KPHBhdGggZD0iTTEyIDZDNi40OCA2IDIgMTAuNDggMiAxNkMyIDIxLjUyIDYuNDggMjYgMTIgMjZDMjEuNTIgMjYgMjYgMjEuNTIgMjYgMTZDMjYgMTAuNDggMjEuNTIgNiAxMiA2WiIgZmlsbD0id2hpdGUiLz4KPHBhdGggZD0iTTEyIDEwQzE0LjIwOTEgMTAgMTYgMTEuNzkwOSAxNiAxNEMxNiAxNi4yMDkxIDE0LjIwOTEgMTggMTIgMThDOS43OTA5IDE4IDggMTYuMjA5MSA4IDE0QzggMTEuNzkwOSA5Ljc5MDkgMTAgMTIgMTBaIiBmaWxsPSIjMzRBODUzIi8+Cjwvc3ZnPgo=",
-  iconSize: [28, 28],
-  iconAnchor: [14, 28],
-  popupAnchor: [0, -28],
+    "data:image/svg+xml;utf8,<svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M20 2C12 2 6 8 6 16c0 8 14 22 14 22s14-14 14-22c0-8-6-14-14-14z' fill='%234CAF50' stroke='white' stroke-width='2'/><circle cx='20' cy='16' r='6' fill='white'/></svg>",
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
+  popupAnchor: [0, -40],
+  className: "marker-icon-current-location",
 });
 
 // Amenity/category icon mapping
 const amenityIcons: Record<string, Icon> = {
   restaurant: new Icon({
-    iconUrl: 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/geo-alt-fill.svg',
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
-    popupAnchor: [0, -28],
-    className: 'marker-icon-restaurant',
+    iconUrl:
+      "data:image/svg+xml;utf8,<svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M20 2C12 2 6 8 6 16c0 8 14 22 14 22s14-14 14-22c0-8-6-14-14-14z' fill='%23FF7043' stroke='white' stroke-width='2'/><circle cx='20' cy='16' r='6' fill='white'/></svg>",
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
+    className: "marker-icon-restaurant",
+  }),
+  theatre: new Icon({
+    iconUrl:
+      "data:image/svg+xml;utf8,<svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M20 2C12 2 6 8 6 16c0 8 14 22 14 22s14-14 14-22c0-8-6-14-14-14z' fill='%238E24AA' stroke='white' stroke-width='2'/><circle cx='20' cy='16' r='6' fill='white'/></svg>",
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
+    className: "marker-icon-theatre",
+  }),
+  bench: new Icon({
+    iconUrl:
+      "data:image/svg+xml;utf8,<svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M20 2C12 2 6 8 6 16c0 8 14 22 14 22s14-14 14-22c0-8-6-14-14-14z' fill='%238D6E63' stroke='white' stroke-width='2'/><circle cx='20' cy='16' r='6' fill='white'/></svg>",
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
+    className: "marker-icon-bench",
+  }),
+  clock: new Icon({
+    iconUrl:
+      "data:image/svg+xml;utf8,<svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M20 2C12 2 6 8 6 16c0 8 14 22 14 22s14-14 14-22c0-8-6-14-14-14z' fill='%23396AB3' stroke='white' stroke-width='2'/><circle cx='20' cy='16' r='6' fill='white'/></svg>",
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
+    className: "marker-icon-clock",
   }),
   cafe: new Icon({
-    iconUrl: 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/cup-straw.svg',
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
-    popupAnchor: [0, -28],
-    className: 'marker-icon-cafe',
+    iconUrl:
+      "data:image/svg+xml;utf8,<svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M20 2C12 2 6 8 6 16c0 8 14 22 14 22s14-14 14-22c0-8-6-14-14-14z' fill='%2300BFAE' stroke='white' stroke-width='2'/><circle cx='20' cy='16' r='6' fill='white'/></svg>",
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
+    className: "marker-icon-cafe",
   }),
   park: new Icon({
-    iconUrl: 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/tree-fill.svg',
-    iconSize: [28, 28],
-    iconAnchor: [14, 28],
-    popupAnchor: [0, -28],
-    className: 'marker-icon-park',
+    iconUrl:
+      "data:image/svg+xml;utf8,<svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M20 2C12 2 6 8 6 16c0 8 14 22 14 22s14-14 14-22c0-8-6-14-14-14z' fill='%234CAF50' stroke='white' stroke-width='2'/><circle cx='20' cy='16' r='6' fill='white'/></svg>",
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
+    className: "marker-icon-park",
+  }),
+
+  museum: new Icon({
+    iconUrl:
+      "data:image/svg+xml;utf8,<svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M20 2C12 2 6 8 6 16c0 8 14 22 14 22s14-14 14-22c0-8-6-14-14-14z' fill='red' stroke='white' stroke-width='2'/><circle cx='20' cy='16' r='6' fill='white'/></svg>",
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
+    className: "marker-icon-park",
+  }),
+  artwork: new Icon({
+    iconUrl:
+      "data:image/svg+xml;utf8,<svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M20 2C12 2 6 8 6 16c0 8 14 22 14 22s14-14 14-22c0-8-6-14-14-14z' fill='pink' stroke='white' stroke-width='2'/><circle cx='20' cy='16' r='6' fill='white'/></svg>",
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
+    className: "marker-icon-park",
+  }),
+  guest_house: new Icon({
+    iconUrl:
+      "data:image/svg+xml;utf8,<svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M20 2C12 2 6 8 6 16c0 8 14 22 14 22s14-14 14-22c0-8-6-14-14-14z' fill='yellow' stroke='white' stroke-width='2'/><circle cx='20' cy='16' r='6' fill='white'/></svg>",
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
+    className: "marker-icon-park",
+  }),
+  gallery: new Icon({
+    iconUrl:
+      "data:image/svg+xml;utf8,<svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M20 2C12 2 6 8 6 16c0 8 14 22 14 22s14-14 14-22c0-8-6-14-14-14z' fill='cyan' stroke='white' stroke-width='2'/><circle cx='20' cy='16' r='6' fill='white'/></svg>",
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
+    className: "marker-icon-park",
   }),
   // Add more categories as needed
 };
+
+// Helper to get color for each amenity type
+const amenityColors: Record<string, string> = {
+  restaurant: "%23FF7043",
+  theatre: "%238E24AA",
+  bench: "%238D6E63",
+  clock: "%23396AB3",
+  cafe: "%2300BFAE",
+  park: "%234CAF50",
+  default: "%23428AF4",
+  museum: "red",
+  artwork: "pink",
+  guest_house: "yellow",
+  gallery: "cyan",
+};
+
+// Helper to generate favorite icon SVG with red border and amenity fill
+function getFavoriteIcon(amenity: string) {
+  const fill = amenityColors[amenity] || amenityColors.default;
+  return new Icon({
+    iconUrl: `data:image/svg+xml;utf8,<svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'><path d='M20 2C12 2 6 8 6 16c0 8 14 22 14 22s14-14 14-22c0-8-6-14-14-14z' fill='${fill}' stroke='red' stroke-width='3'/><circle cx='20' cy='16' r='6' fill='white'/></svg>`,
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40],
+    className: "marker-icon-favorite",
+  });
+}
 
 interface Location {
   _id?: string;
@@ -271,13 +361,13 @@ export default function Map({
     return details.join(", ");
   };
 
-  const handleFavorite = async (id) => {
+  const handleFavorite = async (id: string) => {
     if (favorites.includes(id)) {
       setFavorites(favorites.filter((item) => item !== id));
     } else {
       setFavorites([...favorites, id]);
     }
-    const result =await toggleFavourites(id)
+    const result = await toggleFavourites(id);
   };
   return (
     <div className="h-full w-full relative map-container">
@@ -396,8 +486,16 @@ export default function Map({
                 ]}
                 icon={
                   favorites.includes(location._id || "")
-                    ? favoriteIcon
-                    : (amenityIcons[location.properties.amenity || ''] || defaultIcon)
+                    ? getFavoriteIcon(
+                        location.properties.amenity
+                          ? location.properties.amenity
+                          : location.properties.tourism
+                      )
+                    : amenityIcons[
+                        location.properties.amenity
+                          ? location.properties.amenity
+                          : location.properties.tourism || ""
+                      ] || defaultIcon
                 }
               >
                 <Popup>
@@ -407,7 +505,7 @@ export default function Map({
                         {getLocationName(location)}
                       </h3>
                       <button
-                        onClick={() => handleFavorite(location._id)}
+                        onClick={() => handleFavorite(location?._id as string)}
                         className="text-gray-400 hover:text-red-500 focus:outline-none transition-colors"
                         title={
                           favorites.includes(location._id || "")
@@ -465,7 +563,11 @@ export default function Map({
           className="btn-icon w-14 h-14 flex items-center justify-center shadow-lg"
           title="Center on my location"
         >
-          <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+          <svg
+            className="w-6 h-6 text-blue-600"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
           </svg>
         </button>

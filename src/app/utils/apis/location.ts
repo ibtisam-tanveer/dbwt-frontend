@@ -22,6 +22,14 @@ export const getLocationByAmenity = (amenity: any): Promise<any> => {
     });
 };
 
+
+export const getLocationByTourism = (tourism: any): Promise<any> => {
+    return apiFetch<[]>(`/location?tourism=${tourism}`, {
+        method: "GET",
+        // headers: { authorization: `Bearer ${user.token}` },
+    });
+};
+
 export const getNearestLocations = ({ lon, lat, distance }: any): Promise<any> => {
     return apiFetch<[]>(`/location/nearby?latitude=${lat}&longitude=${lon}&distance=${distance * 1000}`, {
         method: "GET",

@@ -141,7 +141,7 @@ export default function DashboardPage() {
               onClose={() => setFiltersOpen(false)}
             />
             {/* Stats Card */}
-            <div className="card p-4 mt-4">
+            {/* <div className="card p-4 mt-4">
               <h3 className="text-sm font-medium text-gray-700 mb-3">
                 Quick Stats
               </h3>
@@ -173,7 +173,7 @@ export default function DashboardPage() {
                   </span>
                 </div>
               </div>
-            </div>
+            </div> */}
           </div>
         )}
         {/* Floating Action Buttons (FABs) placeholder */}
