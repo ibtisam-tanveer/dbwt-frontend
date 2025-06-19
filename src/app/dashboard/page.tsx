@@ -6,6 +6,7 @@ import LocationFilters from "../components/LocationFilters";
 import Navigation from "../components/Navigation";
 import { useState, useEffect, useRef } from "react";
 import { getFavourites, getLocations } from "../utils/apis/location";
+import FloatingSearchBar from "../components/FloatingSearchBar";
 
 interface Location {
   _id: string;
@@ -39,6 +40,8 @@ export default function DashboardPage() {
     updateLocation: (lat: number, lng: number) => void;
   } | null>(null);
 
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -60,7 +63,6 @@ export default function DashboardPage() {
   //       ? prev.filter((id) => id !== id)
   //       : [...prev, locationId];
 
-      
   //     console.log(newFavorites);
   //     return newFavorites;
   //   });
@@ -83,106 +85,101 @@ export default function DashboardPage() {
     }
   };
 
+  const handleSearch = async (query: string) => {
+    if (!query) {
+      // If search is cleared, show all locations
+      const all = await getLocations();
+      setLocations(all);
+      return;
+    }
+    // Search by name or amenity
+    const byName = await getLocations();
+    const filtered = byName.filter(
+      (loc: any) =>
+        (loc.properties.name &&
+          loc.properties.name.toLowerCase().includes(query.toLowerCase())) ||
+        (loc.properties.amenity &&
+          loc.properties.amenity.toLowerCase().includes(query.toLowerCase()))
+    );
+    setLocations(filtered);
+  };
+
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
-        {/* Enhanced Navigation Bar */}
+      <div className="relative h-screen w-screen bg-gray-50 overflow-hidden">
+        {/* Navigation Bar */}
         <Navigation isAuthenticated={true} />
-
-        {/* Main Content */}
-        <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 pt-20">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Filters Sidebar */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-20">
-                <LocationFilters
-                  ref={locationFiltersRef}
-                  setLocations={setLocations}
-                  favorites={favorites}
-                />
-
-                {/* Stats Card */}
-                <div className="card p-4 mt-6">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">
-                    Quick Stats
-                  </h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Total locations</span>
-                      <span className="font-medium text-gray-900">
-                        {locations.length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Favorites</span>
-                      <span className="font-medium text-gray-900">
-                        {favorites.length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Types</span>
-                      <span className="font-medium text-gray-900">
-                        {
-                          Array.from(
-                            new Set(
-                              locations
-                                .map((loc) => loc.properties.amenity)
-                                .filter(Boolean)
-                            )
-                          ).length
-                        }
-                      </span>
-                    </div>
-                  </div>
+        {/* Full-Screen Map */}
+        <div className="absolute inset-0 z-0">
+          <MapWrapper
+            initialLocationId={selectedLocationId}
+            locations={locations}
+            favorites={favorites}
+            setFavorites={setFavorites}
+            onLocationChange={handleLocationChange}
+          />
+        </div>
+        {/* Floating Search Bar */}
+        {!filtersOpen && (
+          <FloatingSearchBar
+            onSearch={handleSearch}
+            onFilterClick={() => setFiltersOpen((v) => !v)}
+            onLocationClick={() => {
+              // Center map on user location (simulate click on FAB)
+              // You can wire this to MapWrapper/Map via a ref if needed
+              window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+            }}
+          />
+        )}
+        {/* Floating Filters Panel (only when open) */}
+        {filtersOpen && (
+          <div className="fixed top-20 left-6 z-20 w-[340px] max-w-full">
+            <LocationFilters
+              ref={locationFiltersRef}
+              setLocations={setLocations}
+              favorites={favorites}
+              onClose={() => setFiltersOpen(false)}
+            />
+            {/* Stats Card */}
+            <div className="card p-4 mt-4">
+              <h3 className="text-sm font-medium text-gray-700 mb-3">
+                Quick Stats
+              </h3>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Total locations</span>
+                  <span className="font-medium text-gray-900">
+                    {locations.length}
+                  </span>
                 </div>
-              </div>
-            </div>
-
-            {/* Map Section */}
-            <div className="lg:col-span-3">
-              <div className="card p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900">
-                      Interactive Map
-                    </h2>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Explore locations, find nearby places, and manage your
-                      favorites
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="flex items-center space-x-1">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      <span className="text-xs text-gray-600">Regular</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      <span className="text-xs text-gray-600">Favorite</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <span className="text-xs text-gray-600">
-                        You (Draggable)
-                      </span>
-                    </div>
-                  </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Favorites</span>
+                  <span className="font-medium text-gray-900">
+                    {favorites.length}
+                  </span>
                 </div>
-
-                <div className="h-[700px] w-full rounded-lg overflow-hidden">
-                  <MapWrapper
-                    initialLocationId={selectedLocationId}
-                    locations={locations}
-                    favorites={favorites}
-                    setFavorites={setFavorites}
-                    // onFavoriteToggle={handleFavoriteToggle}
-                    onLocationChange={handleLocationChange}
-                  />
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Types</span>
+                  <span className="font-medium text-gray-900">
+                    {
+                      Array.from(
+                        new Set(
+                          locations
+                            .map((loc) => loc.properties.amenity)
+                            .filter(Boolean)
+                        )
+                      ).length
+                    }
+                  </span>
                 </div>
               </div>
             </div>
           </div>
-        </main>
+        )}
+        {/* Floating Action Buttons (FABs) placeholder */}
+        <div className="fixed bottom-8 right-8 z-30 flex flex-col items-end space-y-4">
+          {/* FABs will be added in Map.tsx for map-related actions */}
+        </div>
       </div>
     </ProtectedRoute>
   );

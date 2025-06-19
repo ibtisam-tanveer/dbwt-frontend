@@ -11,6 +11,7 @@ import {
 interface LocationFiltersProps {
   favorites: string[];
   setLocations: any;
+  onClose?: () => void;
 }
 
 export interface LocationFiltersRef {
@@ -20,6 +21,7 @@ export interface LocationFiltersRef {
 const LocationFilters = forwardRef<LocationFiltersRef, LocationFiltersProps>(({
   setLocations,
   favorites,
+  onClose,
 }, ref) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [amenityFilter, setAmenityFilter] = useState("");
@@ -31,6 +33,7 @@ const LocationFilters = forwardRef<LocationFiltersRef, LocationFiltersProps>(({
   const [position, setPosition] = useState<[number, number]>([51.505, -0.09]);
   const [distance, setDistance] = useState(-1);
   const [error, setError] = useState<string | null>(null);
+  const [open, setOpen] = useState(true);
 
   // Expose methods to parent component
   useImperativeHandle(ref, () => ({
@@ -172,8 +175,21 @@ const LocationFilters = forwardRef<LocationFiltersRef, LocationFiltersProps>(({
     getCurrentLocation();
   }, []);
 
+  if (!open) return null;
   return (
-    <div className="card p-6 space-y-6">
+    <div className="card p-6 space-y-6 shadow-xl rounded-xl relative">
+      {/* Close Button */}
+      {onClose && (
+        <button
+          onClick={() => { setOpen(false); if (onClose) onClose(); }}
+          className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 focus:outline-none"
+          title="Close filters"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-semibold text-gray-900">Search & Filters</h2>

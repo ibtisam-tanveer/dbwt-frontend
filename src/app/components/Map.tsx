@@ -38,6 +38,32 @@ const currentLocationIcon = new Icon({
   popupAnchor: [0, -28],
 });
 
+// Amenity/category icon mapping
+const amenityIcons: Record<string, Icon> = {
+  restaurant: new Icon({
+    iconUrl: 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/geo-alt-fill.svg',
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+    popupAnchor: [0, -28],
+    className: 'marker-icon-restaurant',
+  }),
+  cafe: new Icon({
+    iconUrl: 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/cup-straw.svg',
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+    popupAnchor: [0, -28],
+    className: 'marker-icon-cafe',
+  }),
+  park: new Icon({
+    iconUrl: 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/icons/tree-fill.svg',
+    iconSize: [28, 28],
+    iconAnchor: [14, 28],
+    popupAnchor: [0, -28],
+    className: 'marker-icon-park',
+  }),
+  // Add more categories as needed
+};
+
 interface Location {
   _id?: string;
   type: string;
@@ -371,7 +397,7 @@ export default function Map({
                 icon={
                   favorites.includes(location._id || "")
                     ? favoriteIcon
-                    : defaultIcon
+                    : (amenityIcons[location.properties.amenity || ''] || defaultIcon)
                 }
               >
                 <Popup>
@@ -431,6 +457,20 @@ export default function Map({
         <MapUpdater center={position} />
         <MapControlsInner onCenterLocation={getCurrentLocation} />
       </MapContainer>
+
+      {/* Floating Action Buttons (FABs) */}
+      <div className="fixed bottom-8 right-8 z-[1100] flex flex-col items-end space-y-4">
+        <button
+          onClick={getCurrentLocation}
+          className="btn-icon w-14 h-14 flex items-center justify-center shadow-lg"
+          title="Center on my location"
+        >
+          <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
+          </svg>
+        </button>
+        {/* Add more FABs here, e.g., for filters, legend, etc. */}
+      </div>
     </div>
   );
 }
