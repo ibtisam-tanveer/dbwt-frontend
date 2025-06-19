@@ -4,8 +4,8 @@ import { useAuth } from "../providers/AuthProvider";
 import MapWrapper from "../components/MapWrapper";
 import LocationFilters from "../components/LocationFilters";
 import Navigation from "../components/Navigation";
-import { useState, useEffect } from "react";
-import { getLocations } from "../utils/apis/location";
+import { useState, useEffect, useRef } from "react";
+import { getFavourites, getLocations } from "../utils/apis/location";
 
 interface Location {
   _id: string;
@@ -34,6 +34,11 @@ export default function DashboardPage() {
     return [];
   });
 
+  // Reference to the LocationFilters component to update location
+  const locationFiltersRef = useRef<{
+    updateLocation: (lat: number, lng: number) => void;
+  } | null>(null);
+
   useEffect(() => {
     const fetchLocations = async () => {
       try {
@@ -49,19 +54,33 @@ export default function DashboardPage() {
     fetchLocations();
   }, []);
 
-  const handleFavoriteToggle = (locationId: string) => {
-    setFavorites(prev => {
-      const newFavorites = prev.includes(locationId)
-        ? prev.filter(id => id !== locationId)
-        : [...prev, locationId];
+  // const handleFavoriteToggle = (locationId: string) => {
+  //   setFavorites((prev) => {
+  //     const newFavorites = prev.includes(id)
+  //       ? prev.filter((id) => id !== id)
+  //       : [...prev, locationId];
+
       
-      // Save to localStorage
-      if (typeof window !== "undefined") {
-        localStorage.setItem("favoriteLocations", JSON.stringify(newFavorites));
-      }
-      
-      return newFavorites;
-    });
+  //     console.log(newFavorites);
+  //     return newFavorites;
+  //   });
+  // };
+  const getLoggedUserFav = async () => {
+    const res = await getFavourites();
+    const favIds = res.map((fav: any) => fav._id);
+    setFavorites(favIds);
+    // console.log(res[0]._id,'kk');
+  };
+  useEffect(() => {
+    getLoggedUserFav();
+  }, []);
+  const handleLocationChange = (lat: number, lng: number) => {
+    console.log("Location changed to:", lat, lng);
+
+    // Update the location in the filters component
+    if (locationFiltersRef.current?.updateLocation) {
+      locationFiltersRef.current.updateLocation(lat, lng);
+    }
   };
 
   return (
@@ -77,26 +96,41 @@ export default function DashboardPage() {
             <div className="lg:col-span-1">
               <div className="sticky top-20">
                 <LocationFilters
+                  ref={locationFiltersRef}
                   setLocations={setLocations}
                   favorites={favorites}
                 />
-                
+
                 {/* Stats Card */}
                 <div className="card p-4 mt-6">
-                  <h3 className="text-sm font-medium text-gray-700 mb-3">Quick Stats</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-3">
+                    Quick Stats
+                  </h3>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Total locations</span>
-                      <span className="font-medium text-gray-900">{locations.length}</span>
+                      <span className="font-medium text-gray-900">
+                        {locations.length}
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Favorites</span>
-                      <span className="font-medium text-gray-900">{favorites.length}</span>
+                      <span className="font-medium text-gray-900">
+                        {favorites.length}
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Types</span>
                       <span className="font-medium text-gray-900">
-                        {Array.from(new Set(locations.map(loc => loc.properties.amenity).filter(Boolean))).length}
+                        {
+                          Array.from(
+                            new Set(
+                              locations
+                                .map((loc) => loc.properties.amenity)
+                                .filter(Boolean)
+                            )
+                          ).length
+                        }
                       </span>
                     </div>
                   </div>
@@ -113,7 +147,8 @@ export default function DashboardPage() {
                       Interactive Map
                     </h2>
                     <p className="text-sm text-gray-600 mt-1">
-                      Explore locations, find nearby places, and manage your favorites
+                      Explore locations, find nearby places, and manage your
+                      favorites
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -127,17 +162,21 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center space-x-1">
                       <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <span className="text-xs text-gray-600">You</span>
+                      <span className="text-xs text-gray-600">
+                        You (Draggable)
+                      </span>
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="h-[700px] w-full rounded-lg overflow-hidden">
                   <MapWrapper
                     initialLocationId={selectedLocationId}
                     locations={locations}
                     favorites={favorites}
-                    onFavoriteToggle={handleFavoriteToggle}
+                    setFavorites={setFavorites}
+                    // onFavoriteToggle={handleFavoriteToggle}
+                    onLocationChange={handleLocationChange}
                   />
                 </div>
               </div>

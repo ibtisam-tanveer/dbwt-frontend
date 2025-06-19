@@ -18,21 +18,27 @@ interface MapWrapperProps {
   initialLocationId?: string;
   locations: any[];
   favorites: string[];
-  onFavoriteToggle: (locationId: string) => void;
+  setFavorites:any;
+  // onFavoriteToggle: (locationId: string) => void;
+  onLocationChange?: (lat: number, lng: number) => void;
 }
 
 export default function MapWrapper({ 
   initialLocationId, 
   locations, 
   favorites, 
-  onFavoriteToggle 
+  setFavorites,
+  // onFavoriteToggle,
+  onLocationChange
 }: MapWrapperProps) {
   return (
     <Map 
       initialLocationId={initialLocationId}
       locations={locations}
       favorites={favorites}
-      onFavoriteToggle={onFavoriteToggle}
+      setFavorites={setFavorites}
+      // onFavoriteToggle={onFavoriteToggle}
+      onLocationChange={onLocationChange}
     />
   );
 } 

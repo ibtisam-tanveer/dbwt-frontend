@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, forwardRef, useImperativeHandle } from "react";
 import {
   getLocationByAmenity,
   getLocationByName,
@@ -13,10 +13,14 @@ interface LocationFiltersProps {
   setLocations: any;
 }
 
-export default function LocationFilters({
+export interface LocationFiltersRef {
+  updateLocation: (lat: number, lng: number) => void;
+}
+
+const LocationFilters = forwardRef<LocationFiltersRef, LocationFiltersProps>(({
   setLocations,
   favorites,
-}: LocationFiltersProps) {
+}, ref) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [amenityFilter, setAmenityFilter] = useState("");
   const [filterData, setFilterData] = useState([]);
@@ -27,6 +31,16 @@ export default function LocationFilters({
   const [position, setPosition] = useState<[number, number]>([51.505, -0.09]);
   const [distance, setDistance] = useState(-1);
   const [error, setError] = useState<string | null>(null);
+
+  // Expose methods to parent component
+  useImperativeHandle(ref, () => ({
+    updateLocation: (lat: number, lng: number) => {
+      const newPosition: [number, number] = [lat, lng];
+      setCurrentLocation(newPosition);
+      setPosition(newPosition);
+      console.log("LocationFilters: Location updated to", lat, lng);
+    }
+  }));
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -261,6 +275,21 @@ export default function LocationFilters({
         )}
       </div>
 
+      {/* Current Location Display */}
+      {currentLocation && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-blue-900">Current Location</p>
+              <p className="text-xs text-blue-700">
+                {currentLocation[0].toFixed(4)}, {currentLocation[1].toFixed(4)}
+              </p>
+            </div>
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+          </div>
+        </div>
+      )}
+
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center py-4">
@@ -308,4 +337,8 @@ export default function LocationFilters({
       </div>
     </div>
   );
-}
+});
+
+LocationFilters.displayName = 'LocationFilters';
+
+export default LocationFilters;
