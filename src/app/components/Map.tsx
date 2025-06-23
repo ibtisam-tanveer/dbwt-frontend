@@ -10,7 +10,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { Icon, divIcon } from "leaflet";
-import { useEffect, useState } from "react";
+import { useEffect, useState, forwardRef, useImperativeHandle, useRef } from "react";
 import { toggleFavourites } from "../utils/apis/location";
 
 // Custom icons with better styling
@@ -184,13 +184,24 @@ interface MapProps {
   onLocationChange?: (lat: number, lng: number) => void;
 }
 
+export interface MapRef {
+  centerOnLocation: (lat: number, lng: number) => void;
+}
+
 // Inner map controls component that can access the map context
 function MapControlsInner({
   onCenterLocation,
+  mapRef,
 }: {
   onCenterLocation: () => void;
+  mapRef: React.MutableRefObject<any>;
 }) {
   const map = useMap();
+  
+  // Store map reference for external access
+  useEffect(() => {
+    mapRef.current = map;
+  }, [map, mapRef]);
 
   return (
     <div className="absolute top-4 right-4 z-[1000] space-y-3">
@@ -201,7 +212,7 @@ function MapControlsInner({
         title="Center on my location"
       >
         <svg
-          className="w-5 h-5 text-gray-700"
+          className="w-6 h-6 text-blue-600"
           fill="currentColor"
           viewBox="0 0 24 24"
         >
@@ -253,14 +264,14 @@ function MapUpdater({ center }: { center: [number, number] }) {
   return null;
 }
 
-export default function Map({
+const Map = forwardRef<MapRef, MapProps>(({
   initialLocationId,
   locations,
   favorites,
   setFavorites,
   // onFavoriteToggle,
   onLocationChange,
-}: MapProps) {
+}, ref) => {
   const [position, setPosition] = useState<[number, number]>([51.505, -0.09]); // Default to London
   const [currentLocation, setCurrentLocation] = useState<
     [number, number] | null
@@ -271,6 +282,15 @@ export default function Map({
     null
   );
   const [isDraggingLocation, setIsDraggingLocation] = useState(false);
+  const mapRef = useRef<any>(null);
+
+  useImperativeHandle(ref, () => ({
+    centerOnLocation: (lat: number, lng: number) => {
+      if (mapRef.current) {
+        mapRef.current.setView([lat, lng], 15);
+      }
+    }
+  }));
 
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -435,6 +455,7 @@ export default function Map({
         scrollWheelZoom={true}
         style={{ height: "100%", width: "100%" }}
         zoomControl={false}
+        ref={mapRef}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -475,7 +496,7 @@ export default function Map({
         )}
 
         {/* Location Markers */}
-        {locations.map(
+        {locations?.map(
           (location, index) =>
             location.geometry.type === "Point" && (
               <Marker
@@ -553,9 +574,8 @@ export default function Map({
         )}
 
         <MapUpdater center={position} />
-        <MapControlsInner onCenterLocation={getCurrentLocation} />
+        <MapControlsInner onCenterLocation={getCurrentLocation} mapRef={mapRef} />
       </MapContainer>
-
       {/* Floating Action Buttons (FABs) */}
       <div className="fixed bottom-8 right-8 z-[1100] flex flex-col items-end space-y-4">
         <button
@@ -575,4 +595,8 @@ export default function Map({
       </div>
     </div>
   );
-}
+});
+
+Map.displayName = 'Map';
+
+export default Map;

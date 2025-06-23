@@ -3,6 +3,7 @@ import ProtectedRoute from "../providers/ProtectedRoute";
 import { useAuth } from "../providers/AuthProvider";
 import MapWrapper from "../components/MapWrapper";
 import LocationFilters from "../components/LocationFilters";
+import LocationListButton from "../components/LocationListButton";
 import Navigation from "../components/Navigation";
 import { useState, useEffect, useRef } from "react";
 import { getFavourites, getLocations } from "../utils/apis/location";
@@ -10,13 +11,22 @@ import FloatingSearchBar from "../components/FloatingSearchBar";
 
 interface Location {
   _id: string;
+  type: string;
+  geometry: {
+    type: string;
+    coordinates: [number, number];
+  };
   properties: {
     name?: string;
     amenity?: string;
+    [key: string]: any;
   };
   address?: {
     street?: string;
+    housenumber?: string;
+    postcode?: string;
     city?: string;
+    country?: string;
   };
 }
 
@@ -38,6 +48,11 @@ export default function DashboardPage() {
   // Reference to the LocationFilters component to update location
   const locationFiltersRef = useRef<{
     updateLocation: (lat: number, lng: number) => void;
+  } | null>(null);
+
+  // Reference to the MapWrapper component to center on location
+  const mapWrapperRef = useRef<{
+    centerOnLocation: (lat: number, lng: number) => void;
   } | null>(null);
 
   const [filtersOpen, setFiltersOpen] = useState(false);
@@ -69,9 +84,9 @@ export default function DashboardPage() {
   // };
   const getLoggedUserFav = async () => {
     const res = await getFavourites();
-    console.log(res,"jj")
+    console.log(res, "jj");
     const favIds = res.map((fav: any) => fav._id);
-    console.log(favIds,'jjn')
+    console.log(favIds, "jjn");
     setFavorites(favIds);
     // console.log(res[0]._id,'kk');
   };
@@ -106,6 +121,14 @@ export default function DashboardPage() {
     setLocations(filtered);
   };
 
+  const handleLocationSelect = (location: Location) => {
+    // Center the map on the selected location
+    if (mapWrapperRef.current?.centerOnLocation) {
+      const [lng, lat] = location.geometry.coordinates;
+      mapWrapperRef.current.centerOnLocation(lat, lng);
+    }
+  };
+
   return (
     <ProtectedRoute>
       <div className="relative h-screen w-screen bg-gray-50 overflow-hidden">
@@ -114,6 +137,7 @@ export default function DashboardPage() {
         {/* Full-Screen Map */}
         <div className="absolute inset-0 z-0">
           <MapWrapper
+            ref={mapWrapperRef}
             initialLocationId={selectedLocationId}
             locations={locations}
             favorites={favorites}
@@ -178,10 +202,15 @@ export default function DashboardPage() {
             </div> */}
           </div>
         )}
-        {/* Floating Action Buttons (FABs) placeholder */}
-        <div className="fixed bottom-8 right-8 z-30 flex flex-col items-end space-y-4">
-          {/* FABs will be added in Map.tsx for map-related actions */}
-        </div>
+
+        {/* Location List Button */}
+        <LocationListButton
+        setLocations={setLocations}
+          locations={locations}
+          favorites={favorites}
+          setFavorites={setFavorites}
+          onLocationSelect={handleLocationSelect}
+        />
       </div>
     </ProtectedRoute>
   );

@@ -1,6 +1,8 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { MapRef } from './Map';
 
 const Map = dynamic(() => import('./Map'), {
   ssr: false,
@@ -23,16 +25,31 @@ interface MapWrapperProps {
   onLocationChange?: (lat: number, lng: number) => void;
 }
 
-export default function MapWrapper({ 
+export interface MapWrapperRef {
+  centerOnLocation: (lat: number, lng: number) => void;
+}
+
+const MapWrapper = forwardRef<MapWrapperRef, MapWrapperProps>(({ 
   initialLocationId, 
   locations, 
   favorites, 
   setFavorites,
   // onFavoriteToggle,
   onLocationChange
-}: MapWrapperProps) {
+}, ref) => {
+  const mapRef = useRef<MapRef>(null);
+
+  useImperativeHandle(ref, () => ({
+    centerOnLocation: (lat: number, lng: number) => {
+      if (mapRef.current) {
+        mapRef.current.centerOnLocation(lat, lng);
+      }
+    }
+  }));
+
   return (
     <Map 
+      ref={mapRef}
       initialLocationId={initialLocationId}
       locations={locations}
       favorites={favorites}
@@ -41,4 +58,8 @@ export default function MapWrapper({
       onLocationChange={onLocationChange}
     />
   );
-} 
+});
+
+MapWrapper.displayName = 'MapWrapper';
+
+export default MapWrapper; 
