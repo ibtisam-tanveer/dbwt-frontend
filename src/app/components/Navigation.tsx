@@ -49,6 +49,9 @@ export default function Navigation({ isAuthenticated = false }: NavigationProps)
                     <p className="text-xs text-gray-500">Welcome back</p>
                   </div>
                 </div>
+                <Link href="/profile" className="btn-secondary text-sm">
+                  Profile
+                </Link>
                 <button
                   onClick={logout}
                   className="btn-secondary text-sm"
@@ -128,6 +131,14 @@ export default function Navigation({ isAuthenticated = false }: NavigationProps)
                   onClick={closeMenu}
                 >
                   Dashboard
+                </Link>
+                
+                <Link
+                  href="/profile"
+                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                  onClick={closeMenu}
+                >
+                  Profile
                 </Link>
                 
                 {/* Sign Out */}

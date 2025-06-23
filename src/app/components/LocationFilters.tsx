@@ -258,7 +258,7 @@ const LocationFilters = forwardRef<LocationFiltersRef, LocationFiltersProps>(
             Search locations
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <div className="absolute inset-y-0 right-[10px] pl-2 flex items-center pointer-events-none">
               <svg
                 className="h-5 w-5 text-gray-400"
                 fill="none"
@@ -279,7 +279,7 @@ const LocationFilters = forwardRef<LocationFiltersRef, LocationFiltersProps>(
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search by name..."
-              className="search-input pl-10"
+              className="search-input pl-50 text-black"
             />
           </div>
         </div>
@@ -297,7 +297,7 @@ const LocationFilters = forwardRef<LocationFiltersRef, LocationFiltersProps>(
               id="amenity"
               value={amenityFilter}
               onChange={(e) => setAmenityFilter(e.target.value)}
-              className="search-input appearance-none pr-10"
+              className="search-input appearance-none pr-10 text-black"
             >
               <option value="">All types</option>
               {filterData?.map((amenity) => (
@@ -337,7 +337,7 @@ const LocationFilters = forwardRef<LocationFiltersRef, LocationFiltersProps>(
               id="tourism"
               value={tourismFilter}
               onChange={(e) => setTourismFilter(e.target.value)}
-              className="search-input appearance-none pr-10"
+              className="search-input appearance-none pr-10 text-black"
             >
               <option value="">All types</option>
               {filterTourismData?.map((tourism) => (
