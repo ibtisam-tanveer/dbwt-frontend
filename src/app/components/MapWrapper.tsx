@@ -23,6 +23,8 @@ interface MapWrapperProps {
   setFavorites:any;
   // onFavoriteToggle: (locationId: string) => void;
   onLocationChange?: (lat: number, lng: number) => void;
+  userSavedLocation?: { latitude: number; longitude: number } | null;
+  showNearbyUsers?: boolean;
 }
 
 export interface MapWrapperRef {
@@ -35,7 +37,9 @@ const MapWrapper = forwardRef<MapWrapperRef, MapWrapperProps>(({
   favorites, 
   setFavorites,
   // onFavoriteToggle,
-  onLocationChange
+  onLocationChange,
+  userSavedLocation,
+  showNearbyUsers = false,
 }, ref) => {
   const mapRef = useRef<MapRef>(null);
 
@@ -56,6 +60,8 @@ const MapWrapper = forwardRef<MapWrapperRef, MapWrapperProps>(({
       setFavorites={setFavorites}
       // onFavoriteToggle={onFavoriteToggle}
       onLocationChange={onLocationChange}
+      userSavedLocation={userSavedLocation}
+      showNearbyUsers={showNearbyUsers}
     />
   );
 });

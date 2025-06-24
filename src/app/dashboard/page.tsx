@@ -7,6 +7,7 @@ import LocationListButton from "../components/LocationListButton";
 import Navigation from "../components/Navigation";
 import { useState, useEffect, useRef } from "react";
 import { getFavourites, getLocations } from "../utils/apis/location";
+import { getCurrentLocation } from "../utils/apis/user";
 import FloatingSearchBar from "../components/FloatingSearchBar";
 
 interface Location {
@@ -36,6 +37,8 @@ export default function DashboardPage() {
   const [selectedLocationId, setSelectedLocationId] = useState<
     string | undefined
   >();
+  const [userSavedLocation, setUserSavedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [showNearbyUsers, setShowNearbyUsers] = useState(false);
   const [favorites, setFavorites] = useState<string[]>(() => {
     // Load favorites from localStorage
     if (typeof window !== "undefined") {
@@ -56,6 +59,27 @@ export default function DashboardPage() {
   } | null>(null);
 
   const [filtersOpen, setFiltersOpen] = useState(false);
+
+  // Load user's saved location on login
+  useEffect(() => {
+    const loadUserLocation = async () => {
+      try {
+        const savedLocation = await getCurrentLocation();
+        if (savedLocation) {
+          setUserSavedLocation({
+            latitude: savedLocation.latitude,
+            longitude: savedLocation.longitude
+          });
+        }
+      } catch (error) {
+        console.error('Failed to load user location:', error);
+      }
+    };
+
+    if (user) {
+      loadUserLocation();
+    }
+  }, [user]);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -143,6 +167,8 @@ export default function DashboardPage() {
             favorites={favorites}
             setFavorites={setFavorites}
             onLocationChange={handleLocationChange}
+            userSavedLocation={userSavedLocation}
+            showNearbyUsers={showNearbyUsers}
           />
         </div>
         {/* Floating Search Bar */}
@@ -202,6 +228,32 @@ export default function DashboardPage() {
             </div> */}
           </div>
         )}
+
+        {/* Nearby Users Toggle Button */}
+        <div className="fixed top-50 right-4 z-20">
+          <button
+            onClick={() => setShowNearbyUsers(!showNearbyUsers)}
+            className={`px-4 py-2 rounded-lg shadow-lg transition-all duration-200 ${
+              showNearbyUsers
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+            title={showNearbyUsers ? 'Hide nearby users' : 'Show nearby users'}
+          >
+            <div className="flex items-center space-x-2">
+              <svg
+                className="w-5 h-5"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 8H17c-.8 0-1.54.37-2.01 1l-1.7 2.26A6.003 6.003 0 0 0 12 16c-1.66 0-3.14-.68-4.22-1.78L5.29 13.29c-.63-.63-.19-1.71.7-1.71H9c.55 0 1-.45 1-1V7c0-.55-.45-1-1-1H6c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h1.5l1.5 2.25V21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-6h1.5l2.5 6H20z"/>
+              </svg>
+              <span className="text-sm font-medium">
+                {showNearbyUsers ? 'Hide Users' : 'Show Users'}
+              </span>
+            </div>
+          </button>
+        </div>
 
         {/* Location List Button */}
         <LocationListButton

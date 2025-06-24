@@ -12,6 +12,7 @@ import "leaflet/dist/leaflet.css";
 import { Icon, divIcon } from "leaflet";
 import { useEffect, useState, forwardRef, useImperativeHandle, useRef } from "react";
 import { toggleFavourites } from "../utils/apis/location";
+import { updateCurrentLocation, getNearbyUsers, NearbyUser } from "../utils/apis/user";
 
 // Custom icons with better styling
 const defaultIcon = new Icon({
@@ -39,6 +40,15 @@ const currentLocationIcon = new Icon({
   iconAnchor: [20, 40],
   popupAnchor: [0, -40],
   className: "marker-icon-current-location",
+});
+
+const userIcon = new Icon({
+  iconUrl:
+    "data:image/svg+xml;utf8,<svg width='40' height='40' viewBox='0 0 40 40' fill='none' xmlns='http://www.w3.org/2000/svg'><circle cx='20' cy='20' r='18' fill='%236C63FF' stroke='white' stroke-width='2'/><circle cx='20' cy='16' r='6' fill='white'/><path d='M8 32c0-6.627 5.373-12 12-12s12 5.373 12 12' fill='white'/></svg>",
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
+  popupAnchor: [0, -40],
+  className: "marker-icon-user",
 });
 
 // Amenity/category icon mapping
@@ -182,6 +192,8 @@ interface MapProps {
   setFavorites: any;
   // onFavoriteToggle: (locationId: string) => void;
   onLocationChange?: (lat: number, lng: number) => void;
+  userSavedLocation?: { latitude: number; longitude: number } | null;
+  showNearbyUsers?: boolean;
 }
 
 export interface MapRef {
@@ -271,6 +283,8 @@ const Map = forwardRef<MapRef, MapProps>(({
   setFavorites,
   // onFavoriteToggle,
   onLocationChange,
+  userSavedLocation,
+  showNearbyUsers = false,
 }, ref) => {
   const [position, setPosition] = useState<[number, number]>([51.505, -0.09]); // Default to London
   const [currentLocation, setCurrentLocation] = useState<
@@ -282,6 +296,8 @@ const Map = forwardRef<MapRef, MapProps>(({
     null
   );
   const [isDraggingLocation, setIsDraggingLocation] = useState(false);
+  const [nearbyUsers, setNearbyUsers] = useState<NearbyUser[]>([]);
+  const [loadingNearbyUsers, setLoadingNearbyUsers] = useState(false);
   const mapRef = useRef<any>(null);
 
   useImperativeHandle(ref, () => ({
@@ -298,13 +314,29 @@ const Map = forwardRef<MapRef, MapProps>(({
       setError(null);
 
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        async (position) => {
           const newPosition: [number, number] = [
             position.coords.latitude,
             position.coords.longitude,
           ];
           setCurrentLocation(newPosition);
           setPosition(newPosition);
+          setLoading(false);
+
+          // Save location to database
+          try {
+            await updateCurrentLocation({
+              latitude: newPosition[0],
+              longitude: newPosition[1]
+            });
+            
+            // Refresh nearby users if they are being shown
+            if (showNearbyUsers) {
+              loadNearbyUsers();
+            }
+          } catch (error) {
+            console.error('Failed to save location to database:', error);
+          }
           setLoading(false);
         },
         (error) => {
@@ -329,7 +361,7 @@ const Map = forwardRef<MapRef, MapProps>(({
     setIsDraggingLocation(true);
   };
 
-  const handleLocationDragEnd = (event: any) => {
+  const handleLocationDragEnd = async (event: any) => {
     const newPosition: [number, number] = [
       event.target.getLatLng().lat,
       event.target.getLatLng().lng,
@@ -339,11 +371,48 @@ const Map = forwardRef<MapRef, MapProps>(({
     setPosition(newPosition);
     setIsDraggingLocation(false);
 
+    // Save location to database
+    try {
+      await updateCurrentLocation({
+        latitude: newPosition[0],
+        longitude: newPosition[1]
+      });
+      
+      // Refresh nearby users if they are being shown
+      if (showNearbyUsers) {
+        loadNearbyUsers();
+      }
+    } catch (error) {
+      console.error('Failed to save location to database:', error);
+    }
+
     // Notify parent component about location change
     if (onLocationChange) {
       onLocationChange(newPosition[0], newPosition[1]);
     }
   };
+
+  const loadNearbyUsers = async () => {
+    if (!showNearbyUsers) return;
+    
+    setLoadingNearbyUsers(true);
+    try {
+      const users = await getNearbyUsers(5000); // 5km radius instead of 1km
+      console.log('Nearby users received:', users);
+      console.log('Number of nearby users:', users.length);
+      setNearbyUsers(users);
+    } catch (error) {
+      console.error('Failed to load nearby users:', error);
+    } finally {
+      setLoadingNearbyUsers(false);
+    }
+  };
+
+  useEffect(() => {
+    if (showNearbyUsers) {
+      loadNearbyUsers();
+    }
+  }, [showNearbyUsers]);
 
   useEffect(() => {
     // If we have an initialLocationId, find and center on that location
@@ -356,11 +425,19 @@ const Map = forwardRef<MapRef, MapProps>(({
           location.geometry.coordinates[0],
         ]);
       }
+    } else if (userSavedLocation) {
+      // Use user's saved location from database
+      const savedPosition: [number, number] = [
+        userSavedLocation.latitude,
+        userSavedLocation.longitude,
+      ];
+      setCurrentLocation(savedPosition);
+      setPosition(savedPosition);
     } else {
-      // If no initial location, get user's current position
+      // If no initial location or saved location, get user's current position
       getCurrentLocation();
     }
-  }, [initialLocationId, locations]);
+  }, [initialLocationId, locations, userSavedLocation]);
 
   const getLocationName = (location: Location): string => {
     if (location.properties.name) return location.properties.name;
@@ -444,6 +521,18 @@ const Map = forwardRef<MapRef, MapProps>(({
             </svg>
             <span className="text-sm font-medium">
               Drag to move your location
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Loading nearby users indicator */}
+      {showNearbyUsers && loadingNearbyUsers && (
+        <div className="absolute top-4 right-4 z-[1002] bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg shadow-sm">
+          <div className="flex items-center">
+            <div className="loading-spinner h-4 w-4 mr-2"></div>
+            <span className="text-sm font-medium">
+              Loading nearby users...
             </span>
           </div>
         </div>
@@ -572,6 +661,32 @@ const Map = forwardRef<MapRef, MapProps>(({
               </Marker>
             )
         )}
+
+        {/* Nearby Users Markers */}
+        {showNearbyUsers && nearbyUsers.map((user) => (
+          <Marker
+            key={user._id}
+            position={[user.currentLocation.latitude, user.currentLocation.longitude]}
+            icon={userIcon}
+          >
+            <Popup>
+              <div className="p-3 min-w-[200px]">
+                <div className="flex items-center mb-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                  <h3 className="font-semibold text-gray-900">
+                    {user.fullName}
+                  </h3>
+                </div>
+                <p className="text-sm text-gray-600">
+                  Nearby User
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Last updated: {new Date(user.currentLocation.updatedAt).toLocaleString()}
+                </p>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
 
         <MapUpdater center={position} />
         <MapControlsInner onCenterLocation={getCurrentLocation} mapRef={mapRef} />
