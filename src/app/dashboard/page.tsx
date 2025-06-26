@@ -117,7 +117,7 @@ export default function DashboardPage() {
     const res = await getFavourites();
     console.log(res, "jj");
     const favIds = res.map((fav: any) => fav._id);
-    console.log(favIds, "jjn");
+   console.log(favIds, "jjn");
     setFavorites(favIds);
     // console.log(res[0]._id,'kk');
   };
