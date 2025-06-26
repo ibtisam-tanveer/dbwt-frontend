@@ -9,6 +9,8 @@ import { useState, useEffect, useRef } from "react";
 import { getFavourites, getLocations } from "../utils/apis/location";
 import { getCurrentLocation } from "../utils/apis/user";
 import FloatingSearchBar from "../components/FloatingSearchBar";
+import { useSearchParams } from 'next/navigation'
+import LocationDetailsPanel from "../components/LocationDetailsPanel";
 
 interface Location {
   _id: string;
@@ -33,10 +35,11 @@ interface Location {
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
+  const searchParams = useSearchParams()
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState<
     string | undefined
-  >();
+  >(undefined);
   const [userSavedLocation, setUserSavedLocation] = useState<{ latitude: number; longitude: number } | null>(null);
   const [showNearbyUsers, setShowNearbyUsers] = useState(false);
   const [favorites, setFavorites] = useState<string[]>(() => {
@@ -79,7 +82,11 @@ export default function DashboardPage() {
     if (user) {
       loadUserLocation();
     }
-  }, [user]);
+    const locationId = searchParams.get('locationId')
+    if (locationId) {
+      setSelectedLocationId(locationId)
+    }
+  }, [user, searchParams]);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -150,7 +157,12 @@ export default function DashboardPage() {
     if (mapWrapperRef.current?.centerOnLocation) {
       const [lng, lat] = location.geometry.coordinates;
       mapWrapperRef.current.centerOnLocation(lat, lng);
+      setSelectedLocationId(location?._id)
     }
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedLocationId(undefined);
   };
 
   return (
@@ -249,7 +261,7 @@ export default function DashboardPage() {
                 <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 8H17c-.8 0-1.54.37-2.01 1l-1.7 2.26A6.003 6.003 0 0 0 12 16c-1.66 0-3.14-.68-4.22-1.78L5.29 13.29c-.63-.63-.19-1.71.7-1.71H9c.55 0 1-.45 1-1V7c0-.55-.45-1-1-1H6c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h1.5l1.5 2.25V21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-6h1.5l2.5 6H20z"/>
               </svg>
               <span className="text-sm font-medium">
-                {showNearbyUsers ? 'Hide Users' : 'Show Users'}
+                {showNearbyUsers ? 'Hide Users' : 'Nearby Users'}
               </span>
             </div>
           </button>
@@ -263,6 +275,13 @@ export default function DashboardPage() {
           setFavorites={setFavorites}
           onLocationSelect={handleLocationSelect}
         />
+
+        {selectedLocationId && (
+          <LocationDetailsPanel
+            locationId={selectedLocationId}
+            onClose={handleCloseDetails}
+          />
+        )}
       </div>
     </ProtectedRoute>
   );

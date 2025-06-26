@@ -13,6 +13,7 @@ import { Icon, divIcon } from "leaflet";
 import { useEffect, useState, forwardRef, useImperativeHandle, useRef } from "react";
 import { toggleFavourites } from "../utils/apis/location";
 import { updateCurrentLocation, getNearbyUsers, NearbyUser } from "../utils/apis/user";
+import { useRouter } from "next/navigation";
 
 // Custom icons with better styling
 const defaultIcon = new Icon({
@@ -150,6 +151,30 @@ const amenityColors: Record<string, string> = {
   artwork: "pink",
   guest_house: "yellow",
   gallery: "cyan",
+};
+
+// Helper to get amenity color, decoding for use in styles
+const getAmenityColor = (amenity: string): string => {
+  const color = amenityColors[amenity] || amenityColors.default;
+  return color.replace(/%23/g, "#");
+};
+
+const AmenityIcon = ({ amenity, className }: { amenity: string, className?: string }) => {
+  const iconPaths: Record<string, string> = {
+    restaurant: "M6.5 10.5H4.5V12.5H6.5V10.5ZM17.5 10.5H9.5V12.5H17.5V10.5ZM21.5 2.5H2.5V4.5H21.5V2.5ZM21.5 6.5H2.5V8.5H21.5V6.5Z",
+    cafe: "M16.5 4.5H3.5C2.4 4.5 1.5 5.4 1.5 6.5V12.5C1.5 13.6 2.4 14.5 3.5 14.5H16.5C17.6 14.5 18.5 13.6 18.5 12.5V6.5C18.5 5.4 17.6 4.5 16.5 4.5ZM16.5 12.5H3.5V6.5H16.5V12.5ZM20.5 8.5V10.5H22.5V8.5H20.5Z",
+    theatre: "M20.5 2.5H3.5C2.4 2.5 1.5 3.4 1.5 4.5V20.5C1.5 21.6 2.4 22.5 3.5 22.5H20.5C21.6 22.5 22.5 21.6 22.5 20.5V4.5C22.5 3.4 21.6 2.5 20.5 2.5ZM20.5 20.5H3.5V4.5H20.5V20.5ZM8.5 16.5H15.5V18.5H8.5V16.5ZM8.5 12.5H15.5V14.5H8.5V12.5ZM8.5 8.5H15.5V10.5H8.5V8.5ZM8.5 4.5H15.5V6.5H8.5V4.5Z",
+    park: "M16.5 12.5L12.5 8.5L8.5 12.5L4.5 8.5L0.5 12.5V20.5H24.5V12.5L20.5 8.5L16.5 12.5Z",
+    default: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z",
+  };
+
+  const path = iconPaths[amenity] || iconPaths.default;
+
+  return (
+    <svg className={className || "w-5 h-5 mr-2"} fill="currentColor" viewBox="0 0 24 24">
+      <path d={path}></path>
+    </svg>
+  );
 };
 
 // Helper to generate favorite icon SVG with red border and amenity fill
@@ -299,6 +324,7 @@ const Map = forwardRef<MapRef, MapProps>(({
   const [nearbyUsers, setNearbyUsers] = useState<NearbyUser[]>([]);
   const [loadingNearbyUsers, setLoadingNearbyUsers] = useState(false);
   const mapRef = useRef<any>(null);
+  const router = useRouter()
 
   useImperativeHandle(ref, () => ({
     centerOnLocation: (lat: number, lng: number) => {
@@ -609,53 +635,76 @@ const Map = forwardRef<MapRef, MapProps>(({
                 }
               >
                 <Popup>
-                  <div className="p-3 min-w-[250px]">
-                    <div className="flex justify-between items-start mb-3">
-                      <h3 className="font-semibold text-gray-900 text-base">
+                  <div className="w-64 rounded-lg shadow-lg overflow-hidden">
+                    <div 
+                      className={`p-3 text-white flex items-center`}
+                      style={{ backgroundColor: getAmenityColor(location.properties.amenity || location.properties.tourism || 'default') }}
+                    >
+                      <AmenityIcon amenity={location.properties.amenity || location.properties.tourism || 'default'} className="w-5 h-5 mr-3" />
+                      <h3 className="font-bold text-lg truncate">
                         {getLocationName(location)}
                       </h3>
-                      <button
-                        onClick={() => handleFavorite(location?._id as string)}
-                        className="text-gray-400 hover:text-red-500 focus:outline-none transition-colors"
-                        title={
-                          favorites.includes(location._id || "")
-                            ? "Remove from favorites"
-                            : "Add to favorites"
-                        }
-                      >
-                        <svg
-                          className="w-5 h-5"
-                          fill={
-                            favorites.includes(location._id || "")
-                              ? "red"
-                              : "none"
-                          }
-                          stroke={
-                            favorites.includes(location._id || "")
-                              ? "red"
-                              : "black"
-                          }
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-                          />
-                        </svg>
-                      </button>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">
-                      {getLocationDetails(location)}
-                    </p>
-                    {location.address?.street && (
-                      <div className="text-xs text-gray-500">
-                        📍 {location.address.street}
-                        {location.address.housenumber &&
-                          ` ${location.address.housenumber}`}
+                    <div className="p-4 bg-white">
+                      <p className="text-sm text-gray-700 mb-2 capitalize">
+                        {location.properties.amenity || location.properties.tourism || 'Location'}
+                      </p>
+                      <p className="text-sm text-gray-600 mb-3">
+                        {getLocationDetails(location)}
+                      </p>
+                      {location.address?.street && (
+                        <div className="text-xs text-gray-500 flex items-center mb-4">
+                          <svg className="w-4 h-4 mr-2 text-gray-400" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" /></svg>
+                          <span>
+                            {location.address.street}
+                            {location.address.housenumber && ` ${location.address.housenumber}`}
+                          </span>
+                        </div>
+                      )}
+                       <div className="flex justify-between items-center">
+                        <button
+                          onClick={() => handleFavorite(location?._id as string)}
+                          className={`py-2 px-4 rounded-full text-sm font-semibold flex items-center transition-colors ${
+                            favorites.includes(location._id || "")
+                              ? "bg-red-100 text-red-600 hover:bg-red-200"
+                              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          }`}
+                          title={
+                            favorites.includes(location._id || "")
+                              ? "Remove from favorites"
+                              : "Add to favorites"
+                          }
+                        >
+                          <svg
+                            className={`w-4 h-4 mr-2 ${
+                              favorites.includes(location._id || "") ? "text-red-500" : ""
+                            }`}
+                            fill={
+                              favorites.includes(location._id || "")
+                                ? "currentColor"
+                                : "none"
+                            }
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                            />
+                          </svg>
+                          {favorites.includes(location._id || "")
+                            ? "Favorited"
+                            : "Favorite"}
+                        </button>
+                        <button
+                          onClick={() => router.push(`/dashboard?locationId=${location?._id}`)}
+                          className="text-blue-500 hover:text-blue-600 text-sm font-semibold">
+                          Details
+                        </button>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </Popup>
               </Marker>
