@@ -10,7 +10,14 @@ export async function apiFetch<TResponse, TRequest = unknown>(
 ): Promise<TResponse> {
     console.info("url",url)
     const {method = 'GET', data, headers} = options;
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}${url}`, {
+    
+    // Use environment variable or default to localhost:3000
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const fullUrl = `${baseUrl}${url}`;
+    
+    console.info("Full URL:", fullUrl);
+    
+    const res = await fetch(fullUrl, {
         method,
         headers: {
             'Content-Type': 'application/json',
