@@ -5,7 +5,7 @@ import MapWrapper from "../components/MapWrapper";
 import LocationFilters from "../components/LocationFilters";
 import LocationListButton from "../components/LocationListButton";
 import Navigation from "../components/Navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { getFavourites, getLocations } from "../utils/apis/location";
 import { getCurrentLocation } from "../utils/apis/user";
 import FloatingSearchBar from "../components/FloatingSearchBar";
@@ -33,7 +33,7 @@ interface Location {
   };
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { user, logout } = useAuth();
   const searchParams = useSearchParams()
   const [locations, setLocations] = useState<Location[]>([]);
@@ -284,5 +284,13 @@ export default function DashboardPage() {
         )}
       </div>
     </ProtectedRoute>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <DashboardContent />
+    </Suspense>
   );
 }

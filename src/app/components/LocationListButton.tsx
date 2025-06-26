@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   getFavourites,
   getLocationByName,
@@ -32,7 +32,7 @@ interface Location {
 interface LocationListButtonProps {
   locations: Location[];
   favorites: string[];
-  setFavorites: (favorites: string[]) => void;
+  setFavorites: React.Dispatch<React.SetStateAction<string[]>>;
   onLocationSelect?: (location: Location) => void;
   setLocations: any;
 }
@@ -162,9 +162,9 @@ export default function LocationListButton({
   const handleFavoriteToggle = async (locationId: string) => {
     try {
       await toggleFavourites(locationId);
-      setFavorites((prev : any) => {
+      setFavorites((prev: string[]) => {
         const newFavorites = prev.includes(locationId)
-          ? prev.filter((id:any) => id !== locationId)
+          ? prev.filter((id: string) => id !== locationId)
           : [...prev, locationId];
         return newFavorites;
       });
