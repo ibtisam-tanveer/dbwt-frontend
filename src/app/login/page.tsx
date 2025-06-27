@@ -32,29 +32,26 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        {/* Logo and Header */}
-        <div className="flex justify-center">
-          <div className="flex items-center">
-            <svg className="w-12 h-12 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-pink-50 to-yellow-50 relative overflow-hidden">
+      {/* Animated Glowing Shapes */}
+      <div className="absolute top-[-60px] left-[-60px] w-72 h-72 rounded-full bg-glow-blue glow-shape z-0 animated-float" />
+      <div className="absolute bottom-[-80px] right-[-80px] w-96 h-96 rounded-full bg-glow-pink glow-shape z-0 animated-float" style={{ animationDelay: '2s' }} />
+      <div className="absolute top-1/2 left-1/2 w-40 h-40 rounded-full bg-glow-yellow glow-shape z-0 animated-float" style={{ animationDelay: '1s' }} />
+
+      <div className="relative z-10 w-full max-w-md mx-auto px-4">
+        <div className="glass-card p-10 shadow-2xl animated-fadeInUp mt-24 mb-8">
+          <div className="flex flex-col items-center mb-6">
+            <svg className="w-16 h-16 text-blue-600 animated-float" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
             </svg>
+            <h2 className="mt-4 text-3xl font-bold text-gray-900 animated-fadeInUp">Welcome back</h2>
+            <p className="mt-2 text-gray-600 animated-fadeIn" style={{ animationDelay: '0.2s' }}>
+              Sign in to your account to continue exploring
+            </p>
           </div>
-        </div>
-        <h2 className="mt-6 text-center text-3xl font-bold text-gray-900">
-          Welcome back
-        </h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Sign in to your account to continue exploring
-        </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="card py-8 px-4 sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Email Field */}
-            <div>
+            <div className="animated-fadeInUp" style={{ animationDelay: '0.3s' }}>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
               </label>
@@ -79,7 +76,7 @@ export default function LoginPage() {
             </div>
 
             {/* Password Field */}
-            <div>
+            <div className="animated-fadeInUp" style={{ animationDelay: '0.4s' }}>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
               </label>
@@ -105,7 +102,7 @@ export default function LoginPage() {
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+              <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg animated-fadeInUp" style={{ animationDelay: '0.5s' }}>
                 <div className="flex items-center">
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
@@ -116,11 +113,11 @@ export default function LoginPage() {
             )}
 
             {/* Submit Button */}
-            <div>
+            <div className="animated-fadeInUp" style={{ animationDelay: '0.6s' }}>
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full btn-primary py-3 text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full btn-primary py-3 text-base font-medium disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
@@ -135,7 +132,7 @@ export default function LoginPage() {
           </form>
 
           {/* Divider */}
-          <div className="mt-6">
+          <div className="mt-6 animated-fadeIn" style={{ animationDelay: '0.7s' }}>
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-gray-300" />
@@ -158,7 +155,7 @@ export default function LoginPage() {
         </div>
 
         {/* Back to Home */}
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center animated-fadeIn" style={{ animationDelay: '0.8s' }}>
           <Link
             href="/"
             className="text-gray-600 hover:text-gray-800 text-sm transition-colors"

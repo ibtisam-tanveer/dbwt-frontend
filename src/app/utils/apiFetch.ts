@@ -12,7 +12,7 @@ export async function apiFetch<TResponse, TRequest = unknown>(
     const {method = 'GET', data, headers} = options;
     
     // Use environment variable or default to localhost:3000
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://dbwt-backend-2.onrender.com';
     const fullUrl = `${baseUrl}${url}`;
     
     console.info("Full URL:", fullUrl);
