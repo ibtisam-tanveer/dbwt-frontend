@@ -242,7 +242,7 @@ function DashboardContent() {
         )}
 
         {/* Nearby Users Toggle Button */}
-        <div className="fixed top-50 right-4 z-20">
+        <div className={`fixed z-20 right-4 ${filtersOpen ? 'top-auto bottom-24' : 'top-52 sm:top-50'} sm:top-50 sm:bottom-auto`}>
           <button
             onClick={() => setShowNearbyUsers(!showNearbyUsers)}
             className={`px-4 py-2 rounded-lg shadow-lg transition-all duration-200 ${
@@ -260,7 +260,7 @@ function DashboardContent() {
               >
                 <path d="M16 4c0-1.11.89-2 2-2s2 .89 2 2-.89 2-2 2-2-.89-2-2zm4 18v-6h2.5l-2.54-7.63A1.5 1.5 0 0 0 18.54 8H17c-.8 0-1.54.37-2.01 1l-1.7 2.26A6.003 6.003 0 0 0 12 16c-1.66 0-3.14-.68-4.22-1.78L5.29 13.29c-.63-.63-.19-1.71.7-1.71H9c.55 0 1-.45 1-1V7c0-.55-.45-1-1-1H6c-.55 0-1 .45-1 1v4c0 .55.45 1 1 1h1.5l1.5 2.25V21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-6h1.5l2.5 6H20z"/>
               </svg>
-              <span className="text-sm font-medium">
+              <span className="text-sm font-medium hidden sm:inline">
                 {showNearbyUsers ? 'Hide Users' : 'Nearby Users'}
               </span>
             </div>

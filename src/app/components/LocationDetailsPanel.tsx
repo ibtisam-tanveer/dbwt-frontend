@@ -54,7 +54,7 @@ export default function LocationDetailsPanel({ locationId, onClose }: LocationDe
 
   if (loading) {
     return (
-      <div className="fixed top-20 right-6 z-30 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-6">
+      <div className="fixed z-30 w-full sm:w-80 left-0 sm:left-auto right-0 sm:right-6 bottom-0 sm:top-20 bg-white rounded-t-xl sm:rounded-lg shadow-xl border border-gray-200 p-4 sm:p-6 max-h-[70vh] sm:max-h-[calc(100vh-120px)] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Location Details</h2>
           <button
@@ -78,7 +78,7 @@ export default function LocationDetailsPanel({ locationId, onClose }: LocationDe
 
   if (!location) {
     return (
-      <div className="fixed top-20 right-6 z-30 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-6">
+      <div className="fixed z-30 w-full sm:w-80 left-0 sm:left-auto right-0 sm:right-6 bottom-0 sm:top-20 bg-white rounded-t-xl sm:rounded-lg shadow-xl border border-gray-200 p-4 sm:p-6 max-h-[70vh] sm:max-h-[calc(100vh-120px)] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-semibold text-gray-900">Location Details</h2>
           <button
@@ -98,7 +98,7 @@ export default function LocationDetailsPanel({ locationId, onClose }: LocationDe
   const [lng, lat] = location.geometry.coordinates;
 
   return (
-    <div className="fixed top-20 right-6 z-30 w-80 bg-white rounded-lg shadow-xl border border-gray-200 p-6 max-h-[calc(100vh-120px)] overflow-y-auto">
+    <div className="fixed z-30 w-full sm:w-80 left-0 sm:left-auto right-0 sm:right-6 bottom-0 sm:top-20 bg-white rounded-t-xl sm:rounded-lg shadow-xl border border-gray-200 p-4 sm:p-6 max-h-[70vh] sm:max-h-[calc(100vh-120px)] overflow-y-auto">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-gray-900">Location Details</h2>
         <button

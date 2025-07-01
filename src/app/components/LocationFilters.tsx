@@ -208,7 +208,7 @@ const LocationFilters = forwardRef<LocationFiltersRef, LocationFiltersProps>(
 
     if (!open) return null;
     return (
-      <div className="card p-6 space-y-6 shadow-xl rounded-xl relative">
+      <div className="card p-4 sm:p-6 space-y-6 shadow-xl rounded-t-xl sm:rounded-xl fixed sm:static w-full sm:w-[340px] left-0 right-0 bottom-0 sm:top-auto z-30 max-h-[70vh] sm:max-h-none overflow-y-auto">
         {/* Close Button */}
         {onClose && (
           <button

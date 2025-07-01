@@ -19,7 +19,7 @@ export default function FloatingSearchBar({
   };
 
   return (
-    <div className="fixed top-20 left-6 z-[1050] flex items-center w-[350px] max-w-full bg-white rounded-full shadow-lg border border-gray-200 px-4 py-2 space-x-2">
+    <div className="fixed z-[1050] flex items-center w-full max-w-xs sm:max-w-md md:max-w-lg left-0 right-0 mx-auto top-16 sm:top-20 px-1 sm:px-2 bg-white rounded-full shadow-lg border border-gray-200 py-1.5 sm:py-2 space-x-2 min-h-[40px] sm:min-h-0">
       {/* Search Icon */}
       <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

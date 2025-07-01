@@ -243,7 +243,7 @@ export default function LocationListButton({
 
       {/* Location List Panel */}
       {isOpen && (
-        <div className="fixed bottom-40 right-8 z-40 w-80 max-h-96 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+        <div className="fixed z-40 w-full sm:w-80 left-0 sm:left-auto right-0 sm:right-8 bottom-0 sm:bottom-40 bg-white rounded-t-xl sm:rounded-lg shadow-xl border border-gray-200 overflow-hidden max-h-[70vh] sm:max-h-96">
           {/* Header */}
           <div className="bg-blue-600 text-white p-4">
             <h3 className="text-lg font-semibold">Locations</h3>
